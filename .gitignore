@@ -11,3 +11,9 @@
 # Azure Developer CLI local environment state
 .azure/*/.env
 .azure/config.json
+
+# Local validation/build artifacts
+.validation-work/
+.validation-review-vm/
+infra/environments/validation.*.bicepparam
+!infra/environments/validation.bicepparam.example
