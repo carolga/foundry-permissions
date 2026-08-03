@@ -11,6 +11,9 @@ $ErrorActionPreference = 'Stop'
 
 $failures = [System.Collections.Generic.List[string]]::new()
 $roleGuid = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
+$readerRoleGuid = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
+$searchIndexDataContributorRoleGuid = '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+$searchServiceContributorRoleGuid = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
 $hoaProject = 'hoa-project'
 $contractProject = 'one-to-four-residential-contract-project'
 
@@ -377,7 +380,7 @@ try {
     }
 
     $validationNsg = @($networkSecurityGroups | Where-Object {
-        (ConvertTo-CompactJson $_.Resource) -match '"AllowSshFromBastion"'
+        (ConvertTo-CompactJson $_.Resource) -match '"AllowRdpFromBastion"'
     })
     Assert-Count $validationNsg 1 'Validation-host network security group'
     if ($validationNsg.Count -eq 1) {
@@ -386,11 +389,11 @@ try {
         )
         Assert-Count $validationRules 2 'Validation-host security rule'
         Assert-SecurityRuleContract -Rules $validationRules -Expected @{
-            Name = 'AllowSshFromBastion'; Priority = 100; Direction = 'Inbound'
+            Name = 'AllowRdpFromBastion'; Priority = 100; Direction = 'Inbound'
             Protocol = 'Tcp'
             Source = "[parameters('bastionSubnetPrefix')]"
             Destination = "[parameters('validationSubnetPrefix')]"
-            Ports = @('22')
+            Ports = @('3389')
         }
         Assert-SecurityRuleContract -Rules $validationRules -Expected @{
             Name = 'DenyAllOtherInbound'; Priority = 110; Direction = 'Inbound'
@@ -400,17 +403,17 @@ try {
             Ports = @('*')
         }
 
-        $allowSshRule = @($validationRules | Where-Object {
-            [string](Get-PropertyValue $_ 'name') -ceq 'AllowSshFromBastion'
+        $allowRdpRule = @($validationRules | Where-Object {
+            [string](Get-PropertyValue $_ 'name') -ceq 'AllowRdpFromBastion'
         })
         $denyOtherRule = @($validationRules | Where-Object {
             [string](Get-PropertyValue $_ 'name') -ceq 'DenyAllOtherInbound'
         })
-        if ($allowSshRule.Count -eq 1 -and $denyOtherRule.Count -eq 1) {
-            $allowPriority = [int](Get-PropertyValue (Get-PropertyValue $allowSshRule[0] 'properties') 'priority')
+        if ($allowRdpRule.Count -eq 1 -and $denyOtherRule.Count -eq 1) {
+            $allowPriority = [int](Get-PropertyValue (Get-PropertyValue $allowRdpRule[0] 'properties') 'priority')
             $denyPriority = [int](Get-PropertyValue (Get-PropertyValue $denyOtherRule[0] 'properties') 'priority')
             if ($allowPriority -ge $denyPriority) {
-                Add-Failure 'Validation-host Bastion SSH allow must be evaluated before the catch-all inbound deny.'
+                Add-Failure 'Validation-host Bastion RDP allow must be evaluated before the catch-all inbound deny.'
             }
             if ($denyPriority -ge 65000) {
                 Add-Failure 'Validation-host catch-all inbound deny must override the default priority-65000 AllowVNetInBound rule.'
@@ -547,15 +550,17 @@ try {
         if ($json -match '(?i)"allowSharedKeyAccess"\s*:\s*true') {
             Add-Failure "Storage account $(Get-PropertyValue $record.Resource 'name') enables shared-key authentication."
         }
+        if ($json -notmatch '(?i)"networkAcls"\s*:\s*\{[^}]*"bypass"\s*:\s*"AzureServices"') {
+            Add-Failure "Storage account $(Get-PropertyValue $record.Resource 'name') does not allow trusted Azure services for evaluation asset/rubric generation."
+        }
     }
 
     $groupAssignments = @($roleAssignments | Where-Object {
         $resourceJson = ConvertTo-CompactJson $_.Resource
-        $templateJson = ConvertTo-CompactJson $_.Template
         $resourceJson -match '(?i)"principalType"\s*:\s*"Group"' -and
         $resourceJson -match '(?i)projects' -and
-        (($resourceJson + $templateJson) -match [regex]::Escape($roleGuid) -or
-            ($resourceJson + $templateJson) -match '(?i)foundryUserRoleDefinitionId' -or
+        ($resourceJson -match [regex]::Escape($roleGuid) -or
+            $resourceJson -match '(?i)(foundryUserRoleDefinitionId|foundryUserRoleId)' -or
             $_.Source -match '(?i)(hoa|contract)')
     })
     Assert-Count $groupAssignments 2 'Developer group role assignment'
@@ -584,6 +589,74 @@ try {
     })
     Assert-Count $hoaAssignment 1 'HOA developer assignment'
     Assert-Count $contractAssignment 1 'Contract developer assignment'
+
+    $accountReaderAssignments = @($roleAssignments | Where-Object {
+        $resourceJson = ConvertTo-CompactJson $_.Resource
+        $resourceJson -match '(?i)"principalType"\s*:\s*"Group"' -and
+        $resourceJson -match '(?i)Microsoft\.CognitiveServices/accounts' -and
+        $resourceJson -notmatch '(?i)projects' -and
+        ($resourceJson -match [regex]::Escape($readerRoleGuid) -or
+            $resourceJson -match '(?i)(readerRoleDefinitionId|readerRoleId)')
+    })
+    Assert-Count $accountReaderAssignments 2 'Portal compatibility account Reader assignment'
+
+    foreach ($assignment in $accountReaderAssignments) {
+        $resourceJson = ConvertTo-CompactJson $assignment.Resource
+        $contextJson = ConvertTo-CompactJson $assignment.Template
+        if (($resourceJson + $contextJson) -notmatch [regex]::Escape($readerRoleGuid) -and
+            -not (($resourceJson + $contextJson) -match '(?i)readerRoleDefinitionId' -and
+                $allJson -match [regex]::Escape($readerRoleGuid))) {
+            Add-Failure "Portal compatibility assignment $(Get-PropertyValue $assignment.Resource 'name') does not use the pinned Reader role GUID."
+        }
+        if ($resourceJson -match '(?i)projects') {
+            Add-Failure "Portal compatibility Reader assignment $(Get-PropertyValue $assignment.Resource 'name') is scoped below the Foundry account."
+        }
+    }
+
+    $searchGroupAssignments = @($roleAssignments | Where-Object {
+        $resourceJson = ConvertTo-CompactJson $_.Resource
+        $resourceJson -match '(?i)"principalType"\s*:\s*"Group"' -and
+        $resourceJson -match '(?i)Microsoft\.Search/searchServices' -and
+        ($resourceJson -match [regex]::Escape($searchIndexDataContributorRoleGuid) -or
+            $resourceJson -match [regex]::Escape($searchServiceContributorRoleGuid) -or
+            $resourceJson -match '(?i)search(IndexDataContributor|ServiceContributor)Role(Definition)?Id')
+    })
+    Assert-Count $searchGroupAssignments 4 'Project group Search service assignment'
+
+    foreach ($assignment in $searchGroupAssignments) {
+        $resourceJson = ConvertTo-CompactJson $assignment.Resource
+        $contextJson = ConvertTo-CompactJson $assignment.Template
+        if (($resourceJson + $contextJson) -notmatch [regex]::Escape($searchIndexDataContributorRoleGuid) -and
+            ($resourceJson + $contextJson) -notmatch [regex]::Escape($searchServiceContributorRoleGuid) -and
+            -not (($resourceJson + $contextJson) -match '(?i)search(IndexDataContributor|ServiceContributor)Role(Definition)?Id' -and
+                ($allJson -match [regex]::Escape($searchIndexDataContributorRoleGuid) -or
+                    $allJson -match [regex]::Escape($searchServiceContributorRoleGuid)))) {
+            Add-Failure "Search group assignment $(Get-PropertyValue $assignment.Resource 'name') does not use a pinned Search role GUID."
+        }
+        if ($resourceJson -notmatch '(?i)"principalType"\s*:\s*"Group"') {
+            Add-Failure "Search group assignment $(Get-PropertyValue $assignment.Resource 'name') does not set principalType to Group."
+        }
+    }
+
+    $projectManagedIdentityFoundryAssignments = @($roleAssignments | Where-Object {
+        $resourceJson = ConvertTo-CompactJson $_.Resource
+        $templateJson = ConvertTo-CompactJson $_.Template
+        $resourceJson -match '(?i)"principalType"\s*:\s*"ServicePrincipal"' -and
+        $resourceJson -match '(?i)projects' -and
+        (($resourceJson + $templateJson) -match [regex]::Escape($roleGuid) -or
+            ($resourceJson + $templateJson) -match '(?i)foundryUserRoleDefinitionId')
+    })
+    Assert-Count $projectManagedIdentityFoundryAssignments 2 'Project managed identity Foundry User assignment'
+
+    foreach ($assignment in $projectManagedIdentityFoundryAssignments) {
+        $resourceJson = ConvertTo-CompactJson $assignment.Resource
+        if ($resourceJson -notmatch '(?i)"principalType"\s*:\s*"ServicePrincipal"') {
+            Add-Failure "Project managed identity assignment $(Get-PropertyValue $assignment.Resource 'name') does not set principalType to ServicePrincipal."
+        }
+        if ($resourceJson -notmatch '(?i)projects') {
+            Add-Failure "Project managed identity assignment $(Get-PropertyValue $assignment.Resource 'name') is not scoped to a project."
+        }
+    }
 
     if (@($hoaAssignment).Count -eq 1 -and
         ((ConvertTo-CompactJson $hoaAssignment[0].Resource) + $hoaAssignment[0].Source) -notmatch '(?i)(hoaProjectName|hoa-project|hoa)') {

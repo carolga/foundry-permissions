@@ -1,20 +1,21 @@
 # Azure Deployment Plan
 
-> **Status:** Defender remediation deployed; cleanup complete; private-client and clean-user release gates remain
+> **Status:** Ready for Validation
 
 Generated: 2026-07-31  
-Last updated: 2026-08-01T13:12:35-05:00
+Last updated: 2026-08-02T09:19:50-05:00
 
 ## 1. Approved scope
 
-Validate Bicep only for the `validation` environment. Management-plane validation
-and what-if are permitted, but do not deploy, create Azure resources, modify
-Entra groups, or invoke account/list-key operations.
+Extend the deployed `validation` environment with one small private Windows
+validation VM for browser-based Foundry testing through the existing Standard
+Azure Bastion host. The VM will have no public IP and will not modify Entra
+group membership or Foundry project RBAC.
 
 | Attribute | Confirmed value |
 |---|---|
-| Subscription | `bcecc00d-409b-4dbc-a910-029bdb668640` |
-| Tenant | `b1f8ef35-0f3e-4bd6-971f-78e0de71fbdc` |
+| Subscription | `<subscription-id>` |
+| Tenant | `<tenant-id>` |
 | Location | `northcentralus` |
 | Resource group | `rg-foundry-permissions-validation` |
 | Foundry topology | One account; `hoa-project` and `one-to-four-residential-contract-project` |
@@ -22,6 +23,10 @@ Entra groups, or invoke account/list-key operations.
 | Network | New `192.168.0.0/16` VNet; agent `/24`, private endpoint `/24`, `AzureBastionSubnet` `/26`, validation `/27` |
 | Access | Pre-created Entra groups supplied as immutable object IDs; Foundry User at exact project child scopes only |
 | Model | Parameterized name, version, deployment names, GlobalStandard SKU, and capacity |
+| Validation VM | `vm-validation-ov7f2p`; Windows Server 2022 Azure Edition; `Standard_B2s`; private NIC only |
+| VM access | Existing Standard Bastion; passwordless Entra login; operator role at exact VM scope |
+| Auto-shutdown | Daily `19:00`, `Central Standard Time`; notifications disabled |
+| Portal compatibility exception | Project groups receive account-scope Reader so `ai.azure.com` can navigate/load project blades; this exposes sibling project discovery and is not strict non-discoverability |
 
 Carol confirmed that `192.168.0.0/16` does not overlap connected or reserved networks.
 
@@ -41,7 +46,9 @@ Carol confirmed that `192.168.0.0/16` does not overlap connected or reserved net
 
 ## 3. Accepted implementation decisions
 
-- Use standalone Bicep with a subscription bootstrap entry point, resource-group infrastructure entry point, and separate access entry point.
+- Use standalone Bicep with a subscription bootstrap entry point, a
+  resource-group infrastructure entry point, a separate access entry point,
+  and a separate required-parameter Windows validation VM entry point.
 - Adapt official `15-private-network-standard-agent-setup`; do not use `add-project.bicep` shared backing-resource behavior.
 - Use stable typed `Microsoft.CognitiveServices` API `2025-06-01` because the Bicep schema service currently exposes it for accounts, deployments, projects, connections, and capability hosts. Current Learn also lists it as stable.
 - Keep `networkInjections` at account scope. For fresh injected accounts, rely on the platform-created account capability host to avoid the documented duplicate-host `409`; create one immutable project capability host per project.
@@ -56,16 +63,40 @@ Carol confirmed that `192.168.0.0/16` does not overlap connected or reserved net
   uniquely named settings to send the same complete telemetry symmetrically to
   both isolated project workspaces. Do not accept or invent a central workspace
   ID.
-- Deploy Standard Bastion with a static Standard public IP and the complete documented four-inbound/four-outbound NSG contract. Create the private validation VM only when a non-secret SSH public key is supplied. Its subnet evaluates a priority-100 exact-Bastion TCP 22 allow before a priority-110 catch-all inbound deny, overriding Azure's default priority-65000 `AllowVNetInBound` without changing required outbound flows.
+- Deploy Standard Bastion with a static Standard public IP and the complete
+  documented four-inbound/four-outbound NSG contract. The original unused
+  optional Ubuntu/SSH VM path has been removed. The approved Windows VM is now
+  a separate required-parameter deployment entry point, while the validation
+  subnet evaluates a priority-100 exact-Bastion TCP 3389 allow before a
+  priority-110 catch-all inbound deny. This overrides Azure's default
+  priority-65000 `AllowVNetInBound` without changing existing outbound flows.
 
 ## 4. Security and access gates
 
 - Public network access and local/shared-key authentication are disabled where supported.
-- Storage enforces HTTPS, TLS 1.2+, no blob public access, and no shared-key access.
+- The Foundry account permits the documented trusted Azure services network ACL
+  bypass (`AzureServices`) to support `ai.azure.com` portal resolver calls while
+  public network access remains disabled, default action remains deny, and no
+  IP or virtual network ACL allowlist is added.
+- Storage enforces HTTPS, TLS 1.2+, no blob public access, and no shared-key
+  access. Each project Storage account permits the documented trusted Azure
+  services network ACL bypass (`AzureServices`) so Foundry evaluation asset and
+  rubric generation services can create temporary data references while public
+  network access remains disabled, default action remains deny, and no IP or
+  virtual network ACL allowlist is added.
 - Search uses Microsoft Entra authentication only.
 - Cosmos DB disables local authentication and uses project-specific managed-identity access.
 - Project managed identities receive roles only on their matching backing resources and matching project monitoring resources.
-- Human/group role assignments are emitted only by `infra\access.bicep`, use `principalType: Group`, and target exact project child IDs.
+- Foundry human/group role assignments are emitted only by
+  `infra\access.bicep`, use `principalType: Group`, and target exact project
+  child IDs for Foundry User. The same access entry point also emits the
+  documented portal-compatibility Reader assignment at the Foundry account
+  scope for each project group; this enables `ai.azure.com` navigation but
+  exposes sibling project discovery. Each project group also receives Search
+  Service Contributor and Search Index Data Contributor only on its matching
+  Search service so the Foundry IQ/Knowledge UI can list and create knowledge
+  bases without granting sibling Search access. The separate VM entry point emits one
+  `principalType: User` assignment for the ephemeral operator at exact VM scope.
 - No developer access is assigned at subscription, resource-group, Foundry-account, backing-resource, DNS, or monitoring scope.
 
 ## 5. Generation checklist
@@ -78,6 +109,9 @@ Carol confirmed that `192.168.0.0/16` does not overlap connected or reserved net
 - [x] Generate `infra\main.bicep` and `infra\access.bicep`
 - [x] Generate Foundry, data, network, monitoring, validation-host, and access modules
 - [x] Generate safe validation parameter example and `bicepconfig.json`
+- [x] Replace the unused Ubuntu/SSH path with a separate required-parameter Windows validation VM entry point
+- [x] Add Windows VM, Entra login, VM-scoped operator RBAC, managed OS-disk tagging, and daily auto-shutdown assertions
+- [x] Update the validation runbook with the portal Bastion and two-clean-identity browser procedure
 - [x] Build/lint every entry point and parse generated ARM JSON locally
 - [x] Record meaningful IaC decisions in `.squad\decisions\inbox\basher-generated-iac.md`
 - [x] Complete independent reviewer approval after two lockout-enforced revisions
@@ -100,11 +134,17 @@ Carol confirmed that `192.168.0.0/16` does not overlap connected or reserved net
 | `infra\modules\network\private-dns.bicep` | Foundry, data, and Azure Monitor private DNS zones and links |
 | `infra\modules\network\private-endpoints.bicep` | Foundry and project-data private endpoints and DNS zone groups |
 | `infra\modules\monitoring\monitoring.bicep` | Separate project monitoring, four explicit Foundry account/project diagnostic settings, private-only AMPLS, and monitoring endpoint |
-| `infra\modules\validation\bastion-host.bicep` | Standard Bastion and conditional private validation VM |
+| `infra\modules\validation\bastion-host.bicep` | Existing Standard Bastion only; no VM credential surface |
+| `infra\validation-vm.bicep` | Separate Windows VM deployment entry point with required secure password and ephemeral operator object ID |
+| `azure.yaml` | Azure Developer CLI project file for `azd up` orchestration |
+| `infra\azd\main.bicep` | Subscription-scope azd wrapper that deploys bootstrap, main infrastructure, access roles, and validation VM |
+| `infra\azd\main.parameters.json` | azd ARM parameter file that reads group IDs, operator object ID, password, and location from azd environment variables |
+| `infra\modules\validation\windows-vm.bicep` | Private Windows Server VM, NIC, Entra extension, VM-scoped login RBAC, OS-disk tags, and shutdown schedule |
 | `infra\modules\access\project-managed-identity.bicep` | Project identity roles on matching backing resources only |
 | `infra\modules\access\project-groups.bicep` | Exact project-scope Foundry User assignments |
-| `infra\environments\validation.bicepparam.example` | Safe validation example with no group IDs or SSH key |
+| `infra\environments\validation.bicepparam.example` | Safe base-infrastructure example with no VM credential or operator ID |
 | `infra\bicepconfig.json` | Core analyzer policy |
+| `infra\tests\Assert-WindowsValidationVm.ps1` | Windows image, identity, disk, network, Entra, RBAC, shutdown, and no-Linux/SSH assertions |
 | `.squad\decisions\inbox\basher-generated-iac.md` | Meaningful generation decisions |
 
 ## 7. Validation Proof (historical pre-tag-change evidence)
@@ -122,8 +162,8 @@ tagging change. It does not validate the current IaC revision.
   - [x] No-change post-check confirmed validation and what-if created no resource group or deployment record
 
 **Evidence timestamp:** `2026-08-01T04:40:54Z`  
-**Azure context:** subscription `bcecc00d-409b-4dbc-a910-029bdb668640`,
-tenant `b1f8ef35-0f3e-4bd6-971f-78e0de71fbdc`, region
+**Azure context:** subscription `<subscription-id>`,
+tenant `<tenant-id>`, region
 `northcentralus`; the planned resource group remained absent.
 
 ### Commands and results
@@ -440,6 +480,171 @@ matches.
    bootstrap, infrastructure, and access deployment identities before any
    steady-state or production use.
 
+## 15. Approved Windows validation VM addition
+
+**Requested:** `2026-08-02T08:54:16.190-05:00`
+**Approval status:** Approved by Carol Garcha
+**Preparation status:** **Ready for Validation**; no Azure or Graph mutation performed
+
+### Approved and prepared change
+
+- Replace the unused optional Ubuntu/SSH validation-host path with one
+  Windows Server 2022 Datacenter: Azure Edition validation VM sized
+  `Standard_B2s`.
+- Attach one private NIC to the existing `validation-subnet`; no public IP.
+- Permit inbound TCP 3389 only from the exact `AzureBastionSubnet` prefix,
+  followed by the existing catch-all inbound deny.
+- Retain the existing Standard Bastion host and private DNS links.
+- Install `AADLoginForWindows` and enable a system-assigned managed identity.
+- Assign `Virtual Machine Administrator Login` only to the approved deployment
+  operator at the exact VM scope, using an ephemeral principal object ID.
+- Use Microsoft Entra passwordless authentication through the Azure portal;
+  generate any required emergency local-admin credential only as a secure,
+  ephemeral deployment parameter and never commit or record it.
+- Apply all required tags, including `SecurityControl=Ignore` and
+  `CostControl=Ignore`.
+- Use a Standard SSD OS disk and no data disk.
+- Enable daily auto-shutdown at `19:00` using
+  `Central Standard Time`, with email and webhook notifications disabled.
+
+### Security and cost impact
+
+- Adds ongoing Windows VM compute and OS-disk charges until stopped or deleted.
+- Adds one VM, one NIC, one OS disk, one Entra login extension, and one
+  VM-scoped login role assignment.
+- The VM can reach private Foundry and backing-service endpoints and is
+  therefore an approved administrative test client. It must contain no live
+  customer documents, saved browser passwords, tokens, or persistent test
+  evidence.
+- The VM will be used only to launch an InPrivate browser for the two clean
+  test identities. Those identities remain members only of their respective
+  Foundry groups and receive no VM or parent-scope Azure role.
+- Trusted Launch, Secure Boot, vTPM, managed boot diagnostics, automatic OS
+  updates, and VM-agent extension operations are enabled.
+- The emergency local administrator password is a required `secureString` with
+  no default or output. The operator object ID is also required with no
+  default. Neither appears in the checked-in parameter example.
+- The existing validation-subnet outbound contract is unchanged so Windows
+  activation, Microsoft Entra registration/login, Azure management, private
+  DNS, HTTPS browser access, and stateful return traffic retain their current
+  behavior.
+
+### Prepared architecture
+
+- Live read-only naming confirmed suffix `ov7f2p`; the deterministic resources
+  are `vm-validation-ov7f2p`, `nic-validation-ov7f2p`,
+  `osdisk-validation-ov7f2p`, and
+  `shutdown-computevm-vm-validation-ov7f2p`.
+- `infra\main.bicep` continues to own the deployed shared infrastructure and
+  changes only the validation NSG SSH rule to the approved Bastion-only RDP
+  rule.
+- `infra\validation-vm.bicep` is a separate resource-group entry point. This
+  keeps the safe checked-in base parameter example compilable without making a
+  VM deployable using placeholders.
+- The VM entry point requires `validationAdminPassword` and
+  `operatorObjectId`; deployment must supply both ephemerally.
+- The VM module uses `Microsoft.Compute/virtualMachines@2024-11-01`,
+  `Microsoft.Compute/virtualMachines/extensions@2024-11-01`,
+  `Microsoft.Authorization/roleAssignments@2022-04-01`,
+  `Microsoft.DevTestLab/schedules@2018-09-15`, and
+  `Microsoft.Resources/tags@2023-07-01`.
+- The image URN
+  `MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest`
+  resolved in `northcentralus` to a Generation 2 x64 image; the latest
+  observed version during preparation was `20348.5386.260711`.
+- `Standard_B2s` is available in `northcentralus`, has no listed restriction,
+  supports Generation 2, and belongs to a Trusted Launch-supported family.
+- The `AADLoginForWindows` image catalog exposes handler `2.2.0.0`; Bicep uses
+  `typeHandlerVersion: '2.2'` with automatic minor version upgrades. The
+  provider rejects `enableAutomaticUpgrade`, so the extension omits it.
+- The live built-in role lookup confirmed
+  `Virtual Machine Administrator Login`
+  (`1c0163c0-47e6-4577-8991-ea5c82e286e4`).
+- Because a VM-created managed OS disk does not inherit VM tags reliably, a
+  post-VM `Microsoft.Resources/tags` extension applies the locked tag object to
+  the deterministic OS disk.
+
+### Prepared files
+
+- `infra\validation-vm.bicep`
+- `infra\modules\validation\windows-vm.bicep`
+- `infra\modules\validation\bastion-host.bicep`
+- `infra\modules\network\core-network.bicep`
+- `infra\main.bicep`
+- `infra\environments\validation.bicepparam.example`
+- `infra\tests\subscription-validation-wrapper.bicep`
+- `infra\tests\Assert-WindowsValidationVm.ps1`
+- `infra\tests\Assert-Template.ps1`
+- `infra\tests\Assert-NoSecrets.ps1`
+- `infra\tests\Assert-RequiredTags.ps1`
+- `infra\tests\Invoke-LocalValidation.ps1`
+- `docs\runbooks\validation.md`
+
+### Local preparation proof
+
+- Read-only Azure inspection confirmed the approved subscription, tenant,
+  `northcentralus`, existing resource group, existing
+  `bas-validation-ov7f2p`, existing validation NSG, and absence of any
+  validation VM or user-created validation NIC.
+- Current live validation NSG state was the historical priority-100
+  Bastion-originated TCP 22 allow plus priority-110 deny; no live change was
+  made.
+- Bicep CLI `0.45.15` linted and built bootstrap, infrastructure, access,
+  Windows VM, and subscription-validation entry points.
+- Final compiled SHA-256 values were bootstrap
+  `D3108EA1FBD8F9D186E7C3301BA7855F7590ED49F0582CF62C0B5D51989D14A8`,
+  infrastructure
+  `37D4E8AE2F98554CC6912C0D4995E39309D56EC1D7079E8AE108526B4623F098`,
+  access
+  `C79107B81DE4DDF3727A39B01A666736C01173C9716A759887DE0ACCA03B6E89`,
+  Windows VM
+  `95989AEDA01FAB6839127E56057B5B34B963323D6831DCB5D25E399548681F56`,
+  subscription wrapper
+  `342883DC7C05B3725AD45036CB9516E468F54006DD94BFE93D0E28DFDEFA1574`,
+  and parameters
+  `E14DD6D944A58B402EEFCA255FB0F89D16F9683823497E222997D4A602D73094`.
+- The safe `validation.bicepparam.example` compiled successfully and contains
+  no VM password, SSH key, or operator object ID.
+- `Invoke-LocalValidation.ps1` passed secret-safety, identity-bootstrap,
+  required-tag, topology, Windows VM, Defender, and policy-compatibility
+  assertions.
+- The only compiler diagnostic is the preserved pre-existing
+  `ProjectManagedIdentity` schema warning in
+  `project-connections.bicep`; no new warning or error was introduced.
+- Repository scans found no committed VM password, operator object ID, SSH
+  parameter surface, Ubuntu image, or Linux VM profile.
+
+### Expected Azure what-if shape
+
+1. Existing infrastructure entry point:
+   - one actionable validation NSG modification, replacing
+     `AllowSshFromBastion` TCP 22 with `AllowRdpFromBastion` TCP 3389;
+   - no VM, NIC, RBAC, data, Foundry, Bastion, private DNS, public IP, or
+     outbound-network create/delete;
+   - provider normalization and runtime-principal `Unsupported` entries must
+     remain separately classified against the historical baseline.
+2. Separate validation VM entry point:
+   - create one private NIC;
+   - create one system-identity Trusted Launch Windows VM with its managed
+     Standard SSD OS disk and no data disk;
+   - create one OS-disk tag application, one `AADLoginForWindows` extension,
+     one exact-VM-scope `Virtual Machine Administrator Login` assignment for
+     the ephemeral user object ID, and one enabled notification-disabled
+     shutdown schedule;
+   - no public IP, broader role assignment, unrelated modify, or delete.
+
+### Required workflow
+
+1. [x] Confirm subscription, region, Entra-login operator interface, and
+   cost/security impact.
+2. [x] Update Bicep, static tests, parameter example, and validation runbook.
+3. [x] Set this plan to **Ready for Validation**.
+4. [ ] Run the complete `azure-validate` workflow and require what-if to show only
+   the approved VM-related additions and NSG rule replacement.
+5. [ ] Run `azure-deploy` only after validation succeeds and separate approval.
+6. [ ] Verify Bastion Entra login, no public IP, private DNS/TCP 443, mandatory
+   tags, and no unexpected RBAC or resource drift.
+
 ## 11. Independent live verification
 
 **Reviewer:** Linus  
@@ -683,8 +888,9 @@ present, confirming that validation and what-if did not mutate Azure.
 - Both accounts now report Defender enabled, subscription override enabled,
   on-upload malware scanning disabled, and sensitive-data discovery enabled.
   No scan-results Event Grid destination is configured. Storage public access,
-  shared-key access, default-deny ACLs, bypass, and empty IP/VNet rule sets
-  remained unchanged.
+  shared-key access, default-deny ACLs, and empty IP/VNet rule sets remained
+  unchanged. Storage trusted-services bypass is now an explicit validation
+  exception for Foundry evaluation asset/rubric generation.
 - The two previously validated system topics still mapped one-to-one to the
   two project Storage sources and had only
   `StorageAntimalwareSubscription` children before deployment. Defender
@@ -794,9 +1000,16 @@ in process memory and were neither printed nor persisted.
 
 - Both exact Entra groups resolve once and retain the required assigned
   security-group shape. Each has exactly one `Foundry User` assignment at only
-  its matching project scope.
-- Each project managed identity has exactly seven Azure roles and one Cosmos
-  native data role on only its matching backing estate. The only other
+  its matching project scope plus one `Reader` assignment at the Foundry account
+  scope for portal compatibility. The Reader assignment is known to expose
+  sibling project discovery and therefore changes the validation verdict from
+  strict non-discoverability to portal-compatible project data/action isolation.
+  Each group also has Search Service Contributor and Search Index Data
+  Contributor only on its matching Search service for Foundry IQ/Knowledge UI
+  operations.
+- Each project managed identity has Foundry User at only its matching project,
+  plus exactly seven Azure roles and one Cosmos native data role on only its
+  matching backing estate. The only other
   descendant Azure assignments are the two expected Defender scanner roles,
   one per Storage account.
 - Infrastructure ResourceIdOnly what-if returned Deploy `81`, Ignore `11`,

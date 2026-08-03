@@ -11,6 +11,8 @@ $entryPoints = [ordered]@{
     'bootstrap-main' = Join-Path $infraRoot 'bootstrap\main.bicep'
     'main'           = Join-Path $infraRoot 'main.bicep'
     'access'         = Join-Path $infraRoot 'access.bicep'
+    'validation-vm'  = Join-Path $infraRoot 'validation-vm.bicep'
+    'azd-main'       = Join-Path $infraRoot 'azd\main.bicep'
 }
 
 function Find-BicepCompiler {
@@ -68,6 +70,7 @@ $builtTemplates = [System.Collections.Generic.List[string]]::new()
 $tempBase = Join-Path $repoRoot '.validation-work'
 $workDir = Join-Path $tempBase ("foundry-permissions-validation-{0}" -f [guid]::NewGuid().ToString('N'))
 $createdWorkDir = $false
+$parameterCopy = $null
 
 try {
     $compiler = Find-BicepCompiler
@@ -101,7 +104,34 @@ try {
         $builtTemplates.Add($outputPath)
     }
 
+    $parameterExample = Join-Path $infraRoot 'environments\validation.bicepparam.example'
+    if (-not (Test-Path -LiteralPath $parameterExample -PathType Leaf)) {
+        $failures.Add("Missing parameter example: $parameterExample")
+    }
+    else {
+        $parameterCopy = Join-Path (Split-Path $parameterExample -Parent) (
+            "validation.{0}.bicepparam" -f [guid]::NewGuid().ToString('N')
+        )
+        $parameterOutput = Join-Path $workDir 'validation-parameters.json'
+        Copy-Item -LiteralPath $parameterExample -Destination $parameterCopy -ErrorAction Stop
+        Write-Host "Compiling $parameterExample"
+
+        if ($compiler.Kind -eq 'az') {
+            & $compiler.Path bicep build-params --file $parameterCopy --outfile $parameterOutput
+        }
+        else {
+            & $compiler.Path build-params $parameterCopy --outfile $parameterOutput
+        }
+
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $parameterOutput -PathType Leaf)) {
+            $failures.Add("Bicep parameter compilation failed: $parameterExample")
+        }
+    }
+
     $compiledPaths = @($builtTemplates | ForEach-Object { $_ })
+    $assertionCompiledPaths = @($compiledPaths | Where-Object {
+        (Split-Path -Leaf $_) -ne 'azd-main.json'
+    })
     if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-NoSecrets.ps1') -SourcePath $infraRoot -TemplatePath $compiledPaths) -ne 0) {
         $failures.Add('Secret-safety assertions failed.')
     }
@@ -111,19 +141,23 @@ try {
     }
 
     if ($builtTemplates.Count -eq $entryPoints.Count) {
-        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-RequiredTags.ps1') -SourcePath $infraRoot -TemplatePath $compiledPaths) -ne 0) {
+        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-RequiredTags.ps1') -SourcePath $infraRoot -TemplatePath $assertionCompiledPaths) -ne 0) {
             $failures.Add('Required-tag assertions failed.')
         }
 
-        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-Template.ps1') -TemplatePath $compiledPaths) -ne 0) {
+        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-Template.ps1') -TemplatePath $assertionCompiledPaths) -ne 0) {
             $failures.Add('Template structure assertions failed.')
         }
 
-        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-DefenderStorageOptOut.ps1') -TemplatePath $compiledPaths) -ne 0) {
+        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-WindowsValidationVm.ps1') -SourcePath $infraRoot -TemplatePath $assertionCompiledPaths) -ne 0) {
+            $failures.Add('Windows validation VM assertions failed.')
+        }
+
+        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-DefenderStorageOptOut.ps1') -TemplatePath $assertionCompiledPaths) -ne 0) {
             $failures.Add('Defender for Storage opt-out assertions failed.')
         }
 
-        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-PolicyCompatibility.ps1') -SourcePath $infraRoot -TemplatePath $compiledPaths) -ne 0) {
+        if ((Invoke-Assertion -Script (Join-Path $PSScriptRoot 'Assert-PolicyCompatibility.ps1') -SourcePath $infraRoot -TemplatePath $assertionCompiledPaths) -ne 0) {
             $failures.Add('Policy compatibility assertions failed.')
         }
     }
@@ -135,6 +169,10 @@ catch {
     $failures.Add($_.Exception.Message)
 }
 finally {
+    if ($null -ne $parameterCopy -and (Test-Path -LiteralPath $parameterCopy -PathType Leaf)) {
+        Remove-Item -LiteralPath $parameterCopy -Force
+    }
+
     if ($createdWorkDir -and (Test-Path -LiteralPath $workDir)) {
         $resolvedWorkDir = [IO.Path]::GetFullPath($workDir)
         $expectedPrefix = Join-Path $tempBase 'foundry-permissions-validation-'

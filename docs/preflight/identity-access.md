@@ -10,7 +10,7 @@ The Azure context and live Foundry role GUID are correct, and the deploying iden
 
 | Prerequisite | Verdict | Safe evidence / reason |
 |---|---|---|
-| Active Azure context | **PASS** | Subscription `carolga` (`bcecc00d-409b-4dbc-a910-029bdb668640`), tenant `b1f8ef35-0f3e-4bd6-971f-78e0de71fbdc`, state `Enabled`. No UPN was retrieved or recorded. |
+| Active Azure context | **PASS** | Subscription `<subscription-name>` (`<subscription-id>`), tenant `<tenant-id>`, state `Enabled`. No UPN was retrieved or recorded. |
 | Planned resource group | **CONDITIONAL** | `rg-foundry-permissions-validation` does not exist. Only inherited management-group and subscription controls can be evaluated now. |
 | Live Foundry role IDs | **PASS** | The planned Foundry User GUID resolves to the live built-in **Foundry User** role. No GUID/name drift was found. |
 | Foundry User suitability | **CONDITIONAL** | The live role is broad and must still pass feature-specific own-project and sibling-denial tests at child scope. |
@@ -28,7 +28,7 @@ The Azure context and live Foundry role GUID are correct, and the deploying iden
 - Principal type: user
 - Object ID: redacted (tenant-specific deploying-user principal ID)
 - Relevant effective Azure assignments:
-  - Owner at `/subscriptions/bcecc00d-409b-4dbc-a910-029bdb668640`
+  - Owner at `/subscriptions/<subscription-id>`
   - Owner at the tenant management-group scope
   - User Access Administrator inherited from the tenant management-group scope
   - Foundry User at subscription scope
@@ -146,8 +146,8 @@ Eight effective assignments were returned: five inherited from the tenant manage
 ### Known
 
 ```text
-tenantId = b1f8ef35-0f3e-4bd6-971f-78e0de71fbdc
-subscriptionId = bcecc00d-409b-4dbc-a910-029bdb668640
+tenantId = <tenant-id>
+subscriptionId = <subscription-id>
 resourceGroupName = rg-foundry-permissions-validation
 location = northcentralus
 hoaProjectName = hoa-project

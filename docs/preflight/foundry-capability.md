@@ -13,8 +13,8 @@ There is no regional, provider-registration, core resource-quota, or candidate-m
 | Check | Result | Evidence |
 |---|---|---|
 | Azure cloud | **PASS** | Azure public cloud (`AzureCloud`) |
-| Subscription | **PASS** | `carolga` (`bcecc00d-409b-4dbc-a910-029bdb668640`), enabled |
-| Tenant | **PASS** | `b1f8ef35-0f3e-4bd6-971f-78e0de71fbdc` |
+| Subscription | **PASS** | `carolga` (`<subscription-id>`), enabled |
+| Tenant | **PASS** | `<tenant-id>` |
 | Azure CLI | **PASS** | Azure CLI 2.81.0 |
 | Quota extension | **PASS** | `quota` 1.0.0 already installed; no installation was performed |
 | Current operator deployment permissions | **PASS, with isolation caveat** | Subscription Owner is present. The operator also has broad inherited access and must not be used as either project-isolation test identity. |

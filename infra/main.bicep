@@ -87,15 +87,6 @@ param searchPartitionCount int = 1
 @maxValue(730)
 param monitoringRetentionInDays int = 30
 
-@description('Validation VM size.')
-param validationVmSize string = 'Standard_B2s'
-
-@description('Validation VM administrator username.')
-param validationAdminUsername string = 'azureuser'
-
-@description('Non-secret SSH public key. Leave empty to keep the validation VM disabled.')
-param validationSshPublicKey string = ''
-
 var requiredTags = union(tags, {
   environment: environmentName
   workload: 'foundry-permissions'
@@ -372,8 +363,10 @@ module contractConnections './modules/foundry/project-connections.bicep' = {
 module hoaManagedIdentityAccess './modules/access/project-managed-identity.bicep' = {
   name: 'hoa-managed-identity-access-${uniqueSuffix}'
   params: {
+    accountName: foundryAccount.outputs.accountName
     applicationInsightsName: hoaApplicationInsightsName
     cosmosAccountName: hoaData.outputs.cosmosAccountName
+    projectName: hoaProject.outputs.projectName
     projectPrincipalId: hoaProject.outputs.projectPrincipalId
     searchServiceName: hoaData.outputs.searchServiceName
     storageAccountName: hoaData.outputs.storageAccountName
@@ -383,8 +376,10 @@ module hoaManagedIdentityAccess './modules/access/project-managed-identity.bicep
 module contractManagedIdentityAccess './modules/access/project-managed-identity.bicep' = {
   name: 'contract-managed-identity-access-${uniqueSuffix}'
   params: {
+    accountName: foundryAccount.outputs.accountName
     applicationInsightsName: contractApplicationInsightsName
     cosmosAccountName: contractData.outputs.cosmosAccountName
+    projectName: contractProject.outputs.projectName
     projectPrincipalId: contractProject.outputs.projectPrincipalId
     searchServiceName: contractData.outputs.searchServiceName
     storageAccountName: contractData.outputs.storageAccountName
@@ -432,10 +427,6 @@ module validationAccess './modules/validation/bastion-host.bicep' = {
     location: location
     suffix: uniqueSuffix
     tags: sharedTags
-    validationAdminUsername: validationAdminUsername
-    validationSshPublicKey: validationSshPublicKey
-    validationSubnetId: network.outputs.validationSubnetId
-    validationVmSize: validationVmSize
   }
 }
 
@@ -473,5 +464,3 @@ output privateDnsZoneIds array = privateDns.outputs.allPrivateDnsZoneIds
 output virtualNetworkId string = network.outputs.virtualNetworkId
 output agentSubnetId string = network.outputs.agentSubnetId
 output bastionHostId string = validationAccess.outputs.bastionHostId
-output validationVmId string = validationAccess.outputs.validationVmId
-output validationVmDeployed bool = validationAccess.outputs.validationVmDeployed

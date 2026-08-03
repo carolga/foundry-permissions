@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.45.15.27210",
+      "templateHash": "8131750111626643621"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "northcentralus",
+      "allowedValues": [
+        "northcentralus"
+      ],
+      "metadata": {
+        "description": "Azure region for the validation resource group."
+      }
+    },
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "rg-foundry-permissions-validation",
+      "minLength": 1,
+      "maxLength": 90,
+      "metadata": {
+        "description": "Name of the validation resource group."
+      }
+    },
+    "environmentName": {
+      "type": "string",
+      "defaultValue": "validation",
+      "allowedValues": [
+        "validation"
+      ],
+      "metadata": {
+        "description": "Environment identifier."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "Additional approved non-PII tags. Locked governance tags are applied after this object."
+      }
+    }
+  },
+  "variables": {
+    "requiredTags": "[union(parameters('tags'), createObject('environment', parameters('environmentName'), 'workload', 'foundry-permissions', 'managedBy', 'bicep', 'region', parameters('location'), 'dataBoundary', 'shared-admin', 'SecurityControl', 'Ignore', 'CostControl', 'Ignore'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2022-09-01",
+      "name": "[parameters('resourceGroupName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('requiredTags')]"
+    }
+  ],
+  "outputs": {
+    "resourceGroupId": {
+      "type": "string",
+      "value": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
+    },
+    "deployedResourceGroupName": {
+      "type": "string",
+      "value": "[parameters('resourceGroupName')]"
+    }
+  }
+}

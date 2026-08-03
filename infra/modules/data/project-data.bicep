@@ -77,7 +77,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
     isHnsEnabled: false
     minimumTlsVersion: 'TLS1_2'
     networkAcls: {
-      bypass: 'None'
+      bypass: 'AzureServices'
       defaultAction: 'Deny'
       ipRules: []
       virtualNetworkRules: []

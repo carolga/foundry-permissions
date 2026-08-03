@@ -1,9 +1,11 @@
 # Planning Artifact Index
 
-Start with the [canonical integrated project plan](project-plan.md). It resolves conflicts and defines the current gates, roadmap, owners, risks, and definition of done.
+Start with the [root solution README](../../README.md) for the deployed validation environment, current exceptions, cost notes, and resource rationale. The [canonical integrated project plan](project-plan.md) remains the planning baseline and resolves planning conflicts.
 
 | Artifact | Purpose |
 |---|---|
+| [Deployed solution README](../../README.md) | Current deployed architecture, validation findings, cost notes, and resource-by-resource rationale |
+| [Architecture diagram](../architecture/foundry-permissions.drawio) | diagrams.net source with Azure resource icons, network paths, and permissions overlays |
 | [Canonical integrated project plan](project-plan.md) | Approved-with-conditions architecture and execution baseline |
 | [Foundry topology](foundry-topology.md) | Resource, project, network, data, and capability design |
 | [Identity and RBAC](identity-rbac.md) | Group lifecycle, scopes, inheritance, and non-discoverability tests |

@@ -86,7 +86,7 @@ function Test-SourceFile {
     if ($text -match '(?im)^\s*output\s+\w*(password|privateKey|secret|token|connectionString|accountKey|sas)\w*\s') {
         Add-Failure "$($File.FullName) declares a secret-bearing output."
     }
-    if ($text -match "(?im)\b(hoaGroupObjectId|contractGroupObjectId|tenantId|subscriptionId|principalId|clientId)\b\s*(?:=|:)\s*['`"](?<id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})['`"]") {
+    if ($text -match "(?im)\b(hoaGroupObjectId|contractGroupObjectId|operatorObjectId|tenantId|subscriptionId|principalId|clientId)\b\s*(?:=|:)\s*['`"](?<id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})['`"]") {
         if ($Matches.id -ne $allowedRoleGuid -and $Matches.id -ne '00000000-0000-0000-0000-000000000000') {
             Add-Failure "$($File.FullName) commits a tenant-specific object identifier."
         }
@@ -104,22 +104,20 @@ function Test-TemplateObject {
         $name = $parameter.Name
         $definition = $parameter.Value
         $sensitiveName = $name -match '(?i)(password|privateKey|clientSecret|connectionString|accountKey|sasToken|accessToken|bearerToken)'
-        $allowedPublicKey = $name -match '(?i)^sshPublicKey$'
-        if ($sensitiveName -and -not $allowedPublicKey) {
-            Add-Failure "$Location exposes secret-bearing parameter '$name'."
+        if ($sensitiveName) {
+            if ([string](Get-PropertyValue $definition 'type') -ine 'secureString') {
+                Add-Failure "$Location parameter '$name' is secret-bearing but is not secureString."
+            }
+            if ($null -ne (Get-PropertyValue $definition 'defaultValue')) {
+                Add-Failure "$Location parameter '$name' is secret-bearing but has a default value."
+            }
         }
 
-        if ($name -match '(?i)^(hoaGroupObjectId|contractGroupObjectId|tenantId|subscriptionId|principalId|clientId)$' -and
+        if ($name -match '(?i)^(hoaGroupObjectId|contractGroupObjectId|operatorObjectId|tenantId|subscriptionId|principalId|clientId)$' -and
             $null -ne (Get-PropertyValue $definition 'defaultValue') -and
             [string](Get-PropertyValue $definition 'defaultValue') -match '^[0-9a-fA-F-]{36}$' -and
             [string](Get-PropertyValue $definition 'defaultValue') -ne '00000000-0000-0000-0000-000000000000') {
             Add-Failure "$Location gives '$name' a committed tenant-specific default."
-        }
-
-        if ($allowedPublicKey -and
-            $null -ne (Get-PropertyValue $definition 'defaultValue') -and
-            [string](Get-PropertyValue $definition 'defaultValue') -ne '') {
-            Add-Failure "$Location commits an SSH public key as the default for '$name'."
         }
     }
 

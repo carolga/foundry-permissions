@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "validation"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "resourceGroupName": {
+      "value": "rg-foundry-permissions-${AZURE_ENV_NAME}"
+    },
+    "hoaGroupObjectId": {
+      "value": "${HOA_GROUP_OBJECT_ID}"
+    },
+    "contractGroupObjectId": {
+      "value": "${CONTRACT_GROUP_OBJECT_ID}"
+    },
+    "validationAdminPassword": {
+      "value": "${VALIDATION_ADMIN_PASSWORD}"
+    },
+    "operatorObjectId": {
+      "value": "${OPERATOR_OBJECT_ID}"
+    }
+  }
+}

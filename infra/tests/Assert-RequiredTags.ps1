@@ -133,6 +133,8 @@ try {
         'Microsoft.CognitiveServices/accounts/deployments',
         'Microsoft.CognitiveServices/accounts/projects',
         'Microsoft.Compute/virtualMachines',
+        'Microsoft.Compute/virtualMachines/extensions',
+        'Microsoft.DevTestLab/schedules',
         'Microsoft.DocumentDB/databaseAccounts',
         'Microsoft.Insights/components',
         'Microsoft.Insights/privateLinkScopes',
@@ -150,7 +152,8 @@ try {
         'Microsoft.Storage/storageAccounts'
     )
     $propertyTagTypes = @(
-        'Microsoft.CognitiveServices/accounts/projects/capabilityHosts'
+        'Microsoft.CognitiveServices/accounts/projects/capabilityHosts',
+        'Microsoft.Resources/tags'
     )
     $nonTaggableTypes = @(
         'Microsoft.Authorization/roleAssignments',

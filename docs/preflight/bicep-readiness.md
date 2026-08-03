@@ -6,7 +6,7 @@
 
 ## Scope and safety
 
-This was a read-only preflight for subscription `bcecc00d-409b-4dbc-a910-029bdb668640`, region `northcentralus`, and planned resource group `rg-foundry-permissions-validation`.
+This was a read-only preflight for subscription `<subscription-id>`, region `northcentralus`, and planned resource group `rg-foundry-permissions-validation`.
 
 - No Azure resources or providers were created, registered, changed, or deleted.
 - No deployment, validation deployment, or what-if was run because implementation IaC does not exist yet.

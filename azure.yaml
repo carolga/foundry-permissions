@@ -1,0 +1,7 @@
+name: foundry-permissions
+metadata:
+  template: foundry-permissions-private-multiproject
+
+infra:
+  provider: bicep
+  path: infra/azd

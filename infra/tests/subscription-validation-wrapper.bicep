@@ -44,6 +44,5 @@ module infrastructure '../main.bicep' = {
     modelSkuName: 'GlobalStandard'
     modelVersion: '2026-03-17'
     tags: requiredTags
-    validationSshPublicKey: ''
   }
 }

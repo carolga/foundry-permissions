@@ -28,7 +28,7 @@ resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     customSubDomainName: accountName
     disableLocalAuth: true
     networkAcls: {
-      bypass: 'None'
+      bypass: 'AzureServices'
       defaultAction: 'Deny'
       ipRules: []
       virtualNetworkRules: []
@@ -48,4 +48,3 @@ output accountId string = account.id
 output accountName string = account.name
 output accountEndpoint string = account.properties.endpoint
 output accountPrincipalId string = account.identity.principalId
-

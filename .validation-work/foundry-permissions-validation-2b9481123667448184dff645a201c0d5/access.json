@@ -1,0 +1,356 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.45.15.27210",
+      "templateHash": "4647634316399038670"
+    }
+  },
+  "parameters": {
+    "foundryAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Foundry account name returned by the infrastructure deployment."
+      }
+    },
+    "hoaGroupObjectId": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "Immutable object ID for the pre-created hoa-group security group."
+      }
+    },
+    "contractGroupObjectId": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "Immutable object ID for the pre-created One-to-Four-Residential-Contract security group."
+      }
+    },
+    "hoaSearchServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Project-specific HOA Azure AI Search service name."
+      }
+    },
+    "contractSearchServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Project-specific contract Azure AI Search service name."
+      }
+    },
+    "foundryUserRoleDefinitionId": {
+      "type": "string",
+      "defaultValue": "53ca6127-db72-4b80-b1b0-d745d6d5456d",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "Pinned built-in Foundry User role definition GUID."
+      }
+    },
+    "readerRoleDefinitionId": {
+      "type": "string",
+      "defaultValue": "acdd72a7-3385-48ef-bd42-f606fba81ae7",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "Pinned built-in Reader role definition GUID used only for Foundry portal account navigation compatibility."
+      }
+    },
+    "searchIndexDataContributorRoleDefinitionId": {
+      "type": "string",
+      "defaultValue": "8ebe5a00-799e-43f5-93ac-243d3dce84a7",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "Pinned built-in Search Index Data Contributor role definition GUID."
+      }
+    },
+    "searchServiceContributorRoleDefinitionId": {
+      "type": "string",
+      "defaultValue": "7ca78c08-252a-4471-8644-bb5ff32d4ba0",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "Pinned built-in Search Service Contributor role definition GUID."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "project-group-access",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "accountName": {
+            "value": "[parameters('foundryAccountName')]"
+          },
+          "contractGroupObjectId": {
+            "value": "[parameters('contractGroupObjectId')]"
+          },
+          "contractSearchServiceName": {
+            "value": "[parameters('contractSearchServiceName')]"
+          },
+          "foundryUserRoleDefinitionId": {
+            "value": "[parameters('foundryUserRoleDefinitionId')]"
+          },
+          "hoaGroupObjectId": {
+            "value": "[parameters('hoaGroupObjectId')]"
+          },
+          "hoaSearchServiceName": {
+            "value": "[parameters('hoaSearchServiceName')]"
+          },
+          "readerRoleDefinitionId": {
+            "value": "[parameters('readerRoleDefinitionId')]"
+          },
+          "searchIndexDataContributorRoleDefinitionId": {
+            "value": "[parameters('searchIndexDataContributorRoleDefinitionId')]"
+          },
+          "searchServiceContributorRoleDefinitionId": {
+            "value": "[parameters('searchServiceContributorRoleDefinitionId')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.45.15.27210",
+              "templateHash": "11407938312291970645"
+            }
+          },
+          "parameters": {
+            "accountName": {
+              "type": "string",
+              "metadata": {
+                "description": "Microsoft Foundry account name."
+              }
+            },
+            "hoaGroupObjectId": {
+              "type": "string",
+              "metadata": {
+                "description": "Immutable HOA Entra security-group object ID."
+              }
+            },
+            "contractGroupObjectId": {
+              "type": "string",
+              "metadata": {
+                "description": "Immutable contract Entra security-group object ID."
+              }
+            },
+            "hoaSearchServiceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Project-specific HOA Azure AI Search service name."
+              }
+            },
+            "contractSearchServiceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Project-specific contract Azure AI Search service name."
+              }
+            },
+            "foundryUserRoleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "Pinned built-in Foundry User role definition GUID."
+              }
+            },
+            "readerRoleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "Pinned built-in Reader role definition GUID used only for Foundry portal account navigation compatibility."
+              }
+            },
+            "searchIndexDataContributorRoleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "Pinned built-in Search Index Data Contributor role definition GUID."
+              }
+            },
+            "searchServiceContributorRoleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "Pinned built-in Search Service Contributor role definition GUID."
+              }
+            }
+          },
+          "variables": {
+            "foundryUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('foundryUserRoleDefinitionId'))]",
+            "readerRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('readerRoleDefinitionId'))]",
+            "searchIndexDataContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('searchIndexDataContributorRoleDefinitionId'))]",
+            "searchServiceContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('searchServiceContributorRoleDefinitionId'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'hoa-project')]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'hoa-project'), parameters('hoaGroupObjectId'), parameters('foundryUserRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('hoaGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('foundryUserRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'one-to-four-residential-contract-project')]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'one-to-four-residential-contract-project'), parameters('contractGroupObjectId'), parameters('foundryUserRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('contractGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('foundryUserRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), parameters('hoaGroupObjectId'), parameters('readerRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('hoaGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('readerRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), parameters('contractGroupObjectId'), parameters('readerRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('contractGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('readerRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName')), parameters('hoaGroupObjectId'), parameters('searchIndexDataContributorRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('hoaGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('searchIndexDataContributorRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName')), parameters('hoaGroupObjectId'), parameters('searchServiceContributorRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('hoaGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('searchServiceContributorRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName')), parameters('contractGroupObjectId'), parameters('searchIndexDataContributorRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('contractGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('searchIndexDataContributorRoleId')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName')), parameters('contractGroupObjectId'), parameters('searchServiceContributorRoleDefinitionId'))]",
+              "properties": {
+                "principalId": "[parameters('contractGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('searchServiceContributorRoleId')]"
+              }
+            }
+          ],
+          "outputs": {
+            "hoaFoundryUserRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'hoa-project'), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'hoa-project'), parameters('hoaGroupObjectId'), parameters('foundryUserRoleDefinitionId')))]"
+            },
+            "contractFoundryUserRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'one-to-four-residential-contract-project'), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), 'one-to-four-residential-contract-project'), parameters('contractGroupObjectId'), parameters('foundryUserRoleDefinitionId')))]"
+            },
+            "hoaAccountReaderRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), parameters('hoaGroupObjectId'), parameters('readerRoleDefinitionId')))]"
+            },
+            "contractAccountReaderRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), parameters('contractGroupObjectId'), parameters('readerRoleDefinitionId')))]"
+            },
+            "hoaSearchIndexDataContributorRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName')), parameters('hoaGroupObjectId'), parameters('searchIndexDataContributorRoleDefinitionId')))]"
+            },
+            "hoaSearchServiceContributorRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.Search/searchServices', parameters('hoaSearchServiceName')), parameters('hoaGroupObjectId'), parameters('searchServiceContributorRoleDefinitionId')))]"
+            },
+            "contractSearchIndexDataContributorRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName')), parameters('contractGroupObjectId'), parameters('searchIndexDataContributorRoleDefinitionId')))]"
+            },
+            "contractSearchServiceContributorRoleAssignmentId": {
+              "type": "string",
+              "value": "[extensionResourceId(resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.Search/searchServices', parameters('contractSearchServiceName')), parameters('contractGroupObjectId'), parameters('searchServiceContributorRoleDefinitionId')))]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "hoaFoundryUserRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.hoaFoundryUserRoleAssignmentId.value]"
+    },
+    "contractFoundryUserRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.contractFoundryUserRoleAssignmentId.value]"
+    },
+    "hoaAccountReaderRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.hoaAccountReaderRoleAssignmentId.value]"
+    },
+    "contractAccountReaderRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.contractAccountReaderRoleAssignmentId.value]"
+    },
+    "hoaSearchIndexDataContributorRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.hoaSearchIndexDataContributorRoleAssignmentId.value]"
+    },
+    "hoaSearchServiceContributorRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.hoaSearchServiceContributorRoleAssignmentId.value]"
+    },
+    "contractSearchIndexDataContributorRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.contractSearchIndexDataContributorRoleAssignmentId.value]"
+    },
+    "contractSearchServiceContributorRoleAssignmentId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'project-group-access'), '2025-04-01').outputs.contractSearchServiceContributorRoleAssignmentId.value]"
+    }
+  }
+}

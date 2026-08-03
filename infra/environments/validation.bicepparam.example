@@ -23,10 +23,6 @@ param searchReplicaCount = 1
 param searchPartitionCount = 1
 param monitoringRetentionInDays = 30
 
-param validationVmSize = 'Standard_B2s'
-param validationAdminUsername = 'azureuser'
-param validationSshPublicKey = ''
-
 param tags = {
   // These locked values are also enforced by the entry point and cannot be overridden.
   SecurityControl: 'Ignore'

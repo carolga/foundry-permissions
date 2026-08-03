@@ -170,14 +170,14 @@ resource validationNsg 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
   properties: {
     securityRules: [
       {
-        name: 'AllowSshFromBastion'
+        name: 'AllowRdpFromBastion'
         properties: {
           priority: 100
           direction: 'Inbound'
           access: 'Allow'
           protocol: 'Tcp'
           sourcePortRange: '*'
-          destinationPortRange: '22'
+          destinationPortRange: '3389'
           sourceAddressPrefix: bastionSubnetPrefix
           destinationAddressPrefix: validationSubnetPrefix
         }
