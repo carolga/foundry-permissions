@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram id="foundry-terraform" name="Private Foundry - Terraform">
-    <mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1540" pageHeight="1000">
+    <mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1540" pageHeight="1120">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -94,8 +94,11 @@
         <mxCell id="search-binding" value="vectorStoreConnections&lt;br&gt;&lt;b&gt;conn-hoa-search&lt;/b&gt; → Azure AI Search" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#C4B5FD;fontSize=14;" vertex="1" parent="1">
           <mxGeometry x="1070" y="828" width="390" height="60" as="geometry"/>
         </mxCell>
+        <mxCell id="observability" value="OPTIONAL PRIVATE TRACING  |  Application Insights → Log Analytics; project managed identity + AppInsights connection&lt;br&gt;Private-only Azure Monitor Private Link Scope and private endpoint; private DNS and explicitly approved trace readers.&lt;br&gt;Trace data may contain sensitive content. Azure resource diagnostic settings are not included in Terraform." style="rounded=1;arcSize=5;html=1;whiteSpace=wrap;fillColor=#FFFBEB;strokeColor=#D97706;dashed=1;align=left;verticalAlign=middle;spacingLeft=14;fontSize=14;fontColor=#78350F;" vertex="1" parent="1">
+          <mxGeometry x="230" y="928" width="1270" height="110" as="geometry"/>
+        </mxCell>
         <mxCell id="legend" value="Dashed boxes: optional components/subnets.  |  Blue arrows: private traffic / Private Link.  |  Capability-host path, not capabilitySettings. No DR." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
-          <mxGeometry x="230" y="927" width="1270" height="30" as="geometry"/>
+          <mxGeometry x="230" y="1050" width="1270" height="30" as="geometry"/>
         </mxCell>
         <mxCell id="https" value="HTTPS" style="endArrow=block;html=1;strokeColor=#64748B;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.47;labelBackgroundColor=#FFFFFF;" edge="1" source="operator" target="bastion" parent="1">
           <mxGeometry relative="1" as="geometry"/>

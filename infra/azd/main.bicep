@@ -91,6 +91,9 @@ param searchPartitionCount int = 1
 @maxValue(730)
 param monitoringRetentionInDays int = 30
 
+@description('Grant each project group permission to read its own Application Insights traces. Traces may contain sensitive data.')
+param grantProjectGroupsTraceRead bool = false
+
 @description('Virtual network address prefix.')
 param vnetAddressPrefix string = '192.168.0.0/16'
 
@@ -161,6 +164,7 @@ module access '../access.bicep' = {
     contractGroupObjectId: contractGroupObjectId
     contractSearchServiceName: contractSearchServiceName
     foundryAccountName: foundryAccountName
+    grantProjectGroupsTraceRead: grantProjectGroupsTraceRead
     hoaGroupObjectId: hoaGroupObjectId
     hoaSearchServiceName: hoaSearchServiceName
   }

@@ -69,7 +69,23 @@ The diagram shows the network, Foundry account/projects, project data estates, v
 | Each project managed identity | Matching Search | Search Service Contributor; Search Index Data Contributor | Required for Search-backed knowledge/vector operations. |
 | Each project managed identity | Matching Cosmos DB | Cosmos DB Operator; Cosmos DB Built-in Data Contributor | Required for project thread/run storage. |
 | Each project managed identity | Matching Application Insights | Monitoring Metrics Publisher; Monitoring Reader | Required for project telemetry and evaluation monitoring paths. |
+| Each project group, optional | Its own Application Insights | Log Analytics Reader | Read its own project traces when explicitly enabled. |
 | Operator user | Validation VM | Virtual Machine Administrator Login | Allows passwordless Entra RDP through Bastion to the private validation VM. |
+
+### Private tracing
+
+The Bicep deployment already provisions a private Application Insights
+component and Log Analytics workspace per project, their project connections,
+and a shared Azure Monitor Private Link Scope. It also retains its existing
+account and project diagnostics, which use a preview ARM API. Set
+`grantProjectGroupsTraceRead = true` on `infra/access.bicep` or the
+`infra/azd/main.bicep` wrapper only after approving trace access: each project
+group then receives Log Analytics Reader on its own component. This is disabled
+by default. Protected tables may require additional permissions. Trace content
+can include prompts, responses and customer data; review access, retention and
+costs before enabling or granting access. Viewers also need private-network
+access. Verify a fresh agent invocation appears in the project's Traces view;
+resource creation alone does not verify ingestion.
 
 ## Network and portal compatibility exceptions
 

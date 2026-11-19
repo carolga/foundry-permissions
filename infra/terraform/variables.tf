@@ -148,6 +148,34 @@ variable "model" {
   }
 }
 
+variable "observability_enabled" {
+  type        = bool
+  default     = false
+  description = "Create private Application Insights tracing infrastructure; may incur charges and retain customer content."
+}
+
+variable "observability_retention_days" {
+  type        = number
+  default     = 30
+  description = "Retention for the Application Insights component and its Log Analytics workspace."
+  validation {
+    condition     = contains([30, 60, 90, 120, 180, 270, 365, 550, 730], var.observability_retention_days)
+    error_message = "Use an Application Insights retention value: 30, 60, 90, 120, 180, 270, 365, 550, or 730 days."
+  }
+}
+
+variable "trace_reader_principal_ids" {
+  type        = set(string)
+  default     = []
+  description = "Explicitly approved Entra object IDs granted Log Analytics Reader on this project's Application Insights."
+  validation {
+    condition = alltrue([for id in var.trace_reader_principal_ids :
+      can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", id))
+    ]) && (var.observability_enabled || length(var.trace_reader_principal_ids) == 0)
+    error_message = "Use Entra object IDs and enable observability before granting trace access."
+  }
+}
+
 variable "synthetic_prompt_agent_name" {
   type        = string
   default     = null

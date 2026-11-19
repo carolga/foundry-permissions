@@ -40,6 +40,66 @@ run "private_project_contract" {
     condition     = length(azapi_data_plane_resource.synthetic_prompt_agent) == 0
     error_message = "The synthetic agent must be opt-in."
   }
+  assert {
+    condition     = length(azapi_resource.application_insights) == 0 && length(azapi_resource.monitor_connection) == 0
+    error_message = "Observability must be opt-in."
+  }
+}
+
+run "private_observability_contract" {
+  command = plan
+  variables {
+    observability_enabled        = true
+    trace_reader_principal_ids   = ["00000000-0000-0000-0000-000000000003"]
+    observability_retention_days = 60
+  }
+  assert {
+    condition = (
+      azapi_resource.application_insights[0].body.properties.DisableLocalAuth &&
+      azapi_resource.application_insights[0].body.properties.publicNetworkAccessForIngestion == "Disabled" &&
+      azapi_resource.application_insights[0].body.properties.publicNetworkAccessForQuery == "Disabled" &&
+      azapi_resource.monitor_workspace[0].body.properties.publicNetworkAccessForIngestion == "Disabled" &&
+      azapi_resource.monitor_workspace[0].body.properties.publicNetworkAccessForQuery == "Disabled" &&
+      azapi_resource.monitor_workspace[0].body.properties.retentionInDays == 60
+    )
+    error_message = "Tracing storage must use the requested retention and disable public access and local authentication."
+  }
+  assert {
+    condition = (
+      azapi_resource.monitor_scope[0].body.properties.accessModeSettings.ingestionAccessMode == "PrivateOnly" &&
+      azapi_resource.monitor_scope[0].body.properties.accessModeSettings.queryAccessMode == "PrivateOnly" &&
+      length(azapi_resource.monitor_scope_link) == 2 &&
+      length(azapi_resource.private_endpoint) == 5 &&
+      azapi_resource.private_endpoint["monitor"].body.properties.privateLinkServiceConnections[0].properties.groupIds == ["azuremonitor"] &&
+      length(azapi_resource.dns_zone_group["monitor"].body.properties.privateDnsZoneConfigs) == 5
+    )
+    error_message = "Monitoring must attach both resources to private-only AMPLS and configure its private endpoint and DNS."
+  }
+  assert {
+    condition = (
+      azapi_resource.monitor_connection[0].body.properties.category == "AppInsights" &&
+      azapi_resource.monitor_connection[0].body.properties.authType == "ProjectManagedIdentity" &&
+      length(azapi_resource.monitor_project_role) == 2 &&
+      length(azapi_resource.monitor_reader_role) == 1
+    )
+    error_message = "The project must use managed-identity telemetry and only grant explicitly requested trace readers."
+  }
+}
+
+run "reject_trace_reader_without_monitoring" {
+  command = plan
+  variables {
+    trace_reader_principal_ids = ["00000000-0000-0000-0000-000000000003"]
+  }
+  expect_failures = [var.trace_reader_principal_ids]
+}
+
+run "reject_unsupported_monitor_retention" {
+  command = plan
+  variables {
+    observability_retention_days = 31
+  }
+  expect_failures = [var.observability_retention_days]
 }
 
 run "synthetic_prompt_agent_contract" {

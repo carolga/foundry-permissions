@@ -13,6 +13,12 @@ param hoaSearchServiceName string
 @description('Project-specific contract Azure AI Search service name.')
 param contractSearchServiceName string
 
+@description('Allow each group to read traces only from its own Application Insights.')
+param grantProjectGroupsTraceRead bool = false
+
+param hoaApplicationInsightsName string
+param contractApplicationInsightsName string
+
 @description('Pinned built-in Foundry User role definition GUID.')
 param foundryUserRoleDefinitionId string
 
@@ -29,6 +35,7 @@ var foundryUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefi
 var readerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', readerRoleDefinitionId)
 var searchIndexDataContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', searchIndexDataContributorRoleDefinitionId)
 var searchServiceContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', searchServiceContributorRoleDefinitionId)
+var logAnalyticsReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')
 
 resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
   name: accountName
@@ -50,6 +57,34 @@ resource hoaSearchService 'Microsoft.Search/searchServices@2025-05-01' existing 
 
 resource contractSearchService 'Microsoft.Search/searchServices@2025-05-01' existing = {
   name: contractSearchServiceName
+}
+
+resource hoaApplicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: hoaApplicationInsightsName
+}
+
+resource contractApplicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: contractApplicationInsightsName
+}
+
+resource hoaTraceReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (grantProjectGroupsTraceRead) {
+  scope: hoaApplicationInsights
+  name: guid(hoaApplicationInsights.id, hoaGroupObjectId, logAnalyticsReaderRoleId)
+  properties: {
+    principalId: hoaGroupObjectId
+    principalType: 'Group'
+    roleDefinitionId: logAnalyticsReaderRoleId
+  }
+}
+
+resource contractTraceReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (grantProjectGroupsTraceRead) {
+  scope: contractApplicationInsights
+  name: guid(contractApplicationInsights.id, contractGroupObjectId, logAnalyticsReaderRoleId)
+  properties: {
+    principalId: contractGroupObjectId
+    principalType: 'Group'
+    roleDefinitionId: logAnalyticsReaderRoleId
+  }
 }
 
 resource hoaFoundryUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

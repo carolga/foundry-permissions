@@ -42,15 +42,20 @@ resource "azapi_resource" "private_endpoint_subnet" {
 }
 
 locals {
-  dns_zones = toset([
+  dns_zones = setunion(toset([
     "privatelink.cognitiveservices.azure.com",
     "privatelink.openai.azure.com",
     "privatelink.services.ai.azure.com",
     "privatelink.blob.core.windows.net",
     "privatelink.search.windows.net",
     "privatelink.documents.azure.com",
-  ])
-  private_endpoints = {
+    ]), var.observability_enabled ? toset([
+    "privatelink.monitor.azure.com",
+    "privatelink.oms.opinsights.azure.com",
+    "privatelink.ods.opinsights.azure.com",
+    "privatelink.agentsvc.azure-automation.net",
+  ]) : toset([]))
+  private_endpoints = merge({
     foundry = {
       resource_id = azapi_resource.account.id
       group_id    = "account"
@@ -71,7 +76,19 @@ locals {
       group_id    = "Sql"
       zones       = ["privatelink.documents.azure.com"]
     }
-  }
+    }, var.observability_enabled ? {
+    monitor = {
+      resource_id = azapi_resource.monitor_scope[0].id
+      group_id    = "azuremonitor"
+      zones = [
+        "privatelink.monitor.azure.com",
+        "privatelink.oms.opinsights.azure.com",
+        "privatelink.ods.opinsights.azure.com",
+        "privatelink.agentsvc.azure-automation.net",
+        "privatelink.blob.core.windows.net",
+      ]
+    }
+  } : {})
 }
 
 resource "azapi_resource" "dns_zone" {
@@ -117,6 +134,7 @@ resource "azapi_resource" "private_endpoint" {
       }]
     }
   }
+  depends_on = [azapi_resource.monitor_scope_link]
 }
 
 resource "azapi_resource" "dns_zone_group" {

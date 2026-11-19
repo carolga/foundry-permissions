@@ -17,6 +17,14 @@ output "backing_resources" {
 output "private_endpoint_ids" { value = { for key, endpoint in azapi_resource.private_endpoint : key => endpoint.id } }
 output "model_deployment_name" { value = var.model == null ? null : var.model.deployment_name }
 output "synthetic_prompt_agent_name" { value = var.synthetic_prompt_agent_name == null ? null : azapi_data_plane_resource.synthetic_prompt_agent[0].name }
+output "observability" {
+  value = var.observability_enabled ? {
+    application_insights_id = azapi_resource.application_insights[0].id
+    log_analytics_id        = azapi_resource.monitor_workspace[0].id
+    private_link_scope_id   = azapi_resource.monitor_scope[0].id
+    connection_name         = azapi_resource.monitor_connection[0].name
+  } : null
+}
 output "validation_vm_name" { value = var.validation_ssh_public_key == null ? null : azapi_resource.validation_vm[0].name }
 output "bastion_name" { value = var.bastion_subnet_prefix == null ? null : azapi_resource.bastion[0].name }
 output "windows_desktop_name" { value = var.windows_desktop_enabled ? azapi_resource.windows_vm[0].name : null }

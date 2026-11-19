@@ -19,6 +19,11 @@ param hoaSearchServiceName string
 @description('Project-specific contract Azure AI Search service name.')
 param contractSearchServiceName string
 
+@description('Grant each project group Log Analytics Reader on its own Application Insights component. Trace data may contain sensitive content.')
+param grantProjectGroupsTraceRead bool = false
+
+var uniqueSuffix = substring(uniqueString(subscription().id, resourceGroup().id), 0, 6)
+
 @description('Pinned built-in Foundry User role definition GUID.')
 @minLength(36)
 @maxLength(36)
@@ -46,6 +51,9 @@ module projectGroups './modules/access/project-groups.bicep' = {
     contractGroupObjectId: contractGroupObjectId
     contractSearchServiceName: contractSearchServiceName
     foundryUserRoleDefinitionId: foundryUserRoleDefinitionId
+    grantProjectGroupsTraceRead: grantProjectGroupsTraceRead
+    hoaApplicationInsightsName: 'appi-fp-val-hoa-${uniqueSuffix}'
+    contractApplicationInsightsName: 'appi-fp-val-contract-${uniqueSuffix}'
     hoaGroupObjectId: hoaGroupObjectId
     hoaSearchServiceName: hoaSearchServiceName
     readerRoleDefinitionId: readerRoleDefinitionId

@@ -19,6 +19,12 @@ model = {
 # Existing Entra object IDs, not application/client IDs.
 developer_principal_ids = []
 
+# Optional private tracing; creates billable Azure Monitor resources.
+# Review trace data sensitivity and access before enabling.
+# observability_enabled       = true
+# observability_retention_days = 30
+# trace_reader_principal_ids   = ["00000000-0000-0000-0000-000000000000"]
+
 # Optional: replace any null with a same-subscription Storage, Cosmos DB for
 # NoSQL, or Azure AI Search resource ID. See README before using shared stores.
 existing_storage_account_id = null

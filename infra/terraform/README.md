@@ -16,6 +16,7 @@ in this directory are part of the same configuration and state:
 | Location | Objective |
 |---|---|
 | `foundry.tf`, `data.tf` | Foundry account, project, capability host, connections, model, and new/existing data service selection |
+| `observability.tf` | Optional private Application Insights and Log Analytics tracing |
 | `synthetic-agent.tf` | Optional Terraform-managed synthetic HOA intake prompt agent |
 | `network.tf`, `rbac.tf` | Private networking, DNS, and project access to data services |
 | `bastion.tf`, `validation-vm.tf`, `windows-desktop.tf` | Optional private validation access and desktops |
@@ -50,6 +51,7 @@ this is not an ARM API version.
 | Network and private DNS | `2024-05-01`, `2024-06-01` |
 | Resource groups and subscription locations | `2024-03-01`, `2022-12-01` |
 | Role assignments | `2022-04-01` |
+| Optional Azure Monitor workspace, Application Insights and private link scope | `2023-09-01`, `2020-02-02`, `2021-09-01` |
 | Optional validation VM | `2024-07-01` |
 
 Network injection creates the account host, commonly named
@@ -93,6 +95,7 @@ fix or validated workaround for that preview API.
 5. Create AAD project connections and the project capability host.
 6. Deploy an optional model and private validation VM.
 7. Optionally create the synthetic prompt agent from a runner with private project access.
+8. Optionally provision private Application Insights tracing.
 
 AzAPI polls long-running operations, with a 60-minute capability-host timeout.
 Do not treat the initial HTTP acceptance as deployment success. Role assignments
@@ -247,6 +250,40 @@ history from an accidental disable, rename or destroy; removal requires an
 explicitly reviewed change to that protection. Agent instructions are stored in
 Terraform state, so do not put secrets or customer data in them.
 
+### Optional private tracing
+
+Set `observability_enabled = true` to create a workspace-based Application
+Insights component, Log Analytics workspace, Azure Monitor Private Link Scope
+(AMPLS), private endpoint and DNS links, plus a project-managed-identity
+connection. The project identity receives Monitoring Metrics Publisher and
+Monitoring Reader on that component. Existing deployments remain unchanged by
+default. Set `observability_retention_days` to 30, 60, 90, 120, 180, 270, 365,
+550 or 730; the default is 30. Azure Monitor storage, ingestion and private
+endpoints can incur charges.
+
+Tracing can contain prompts, model output, tool arguments and customer content.
+No human or group is granted trace access by default. To grant approved readers,
+set `trace_reader_principal_ids` to their Entra object IDs; each receives Log
+Analytics Reader on this project's Application Insights. Protected tables can
+require additional permissions. Review data-handling, retention and RBAC before
+enabling; never put secrets in prompts.
+
+The workspace and component disable public ingestion and query, and AMPLS uses
+private-only modes. Azure Monitor's private DNS affects other Monitor resources
+using the same DNS, so review shared DNS and existing AMPLS designs before
+adopting this isolated-VNet example. A trace viewer needs network access through
+the private endpoint as well as read permissions. Foundry's server-side tracing
+should start after connecting Application Insights, but validate a fresh agent
+invocation and its trace in the project Traces view; creating the connection is
+not proof that ingestion or querying works. Hosted agent code emitting its own
+traces also needs a publisher role for the agent identity.
+
+This config does **not** create Azure resource diagnostic settings, alerts or
+dashboards. Diagnostic settings use a preview ARM API and remain outside this
+Terraform example's non-preview ARM API requirement. See
+[Foundry tracing setup](https://learn.microsoft.com/azure/foundry/observability/how-to/trace-agent-setup)
+and [Entra-authenticated ingestion](https://learn.microsoft.com/azure/foundry/observability/how-to/trace-ingestion-entra-authentication).
+
 ### Connect to the optional private jumpbox
 
 Set `validation_ssh_public_key` and `bastion_subnet_prefix` to enable Azure
@@ -344,7 +381,8 @@ paste it into Bastion, then clear the clipboard.
   + Cosmos SQL Data Contributor, and Foundry User on its own project. These are
   account-wide, including on any shared existing stores, for bootstrap;
   production can narrow to provisioned containers/database after validation.
-- This focused deployment omits Application Insights/AMPLS, diagnostics, business
+- Unless explicitly enabled, this deployment omits Application Insights/AMPLS.
+  It omits Azure resource diagnostics, business
   application deployment, CMK, governance policies and private operator access
   infrastructure. Keep the existing Bicep deployment for the broader reference.
 - Search uses one Standard replica for inexpensive testing, not production
