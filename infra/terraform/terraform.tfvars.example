@@ -1,0 +1,42 @@
+subscription_id     = "00000000-0000-0000-0000-000000000000"
+resource_group_name = "rg-foundry-terraform-test"
+location            = "westus3"
+name_prefix         = "hoatf"
+
+# Optional: verify current model availability and quota in your target subscription.
+model = {
+  deployment_name = "hoa-chat"
+  name            = "gpt-5.4-mini"
+  version         = "2026-03-17"
+  sku             = "GlobalStandard"
+  capacity        = 10
+}
+
+# Optional synthetic prompt agent. Only enable from a private-network runner
+# with access to the project and the existing Terraform state. Choose a new name.
+# synthetic_prompt_agent_name = "hoa-intake-test"
+
+# Existing Entra object IDs, not application/client IDs.
+developer_principal_ids = []
+
+# Optional: replace any null with a same-subscription Storage, Cosmos DB for
+# NoSQL, or Azure AI Search resource ID. See README before using shared stores.
+existing_storage_account_id = null
+existing_cosmos_account_id  = null
+existing_search_service_id  = null
+
+# Optional private test VM; supply ONLY an SSH public key, never a private key.
+# validation_ssh_public_key = "ssh-rsa ..."
+# Optional billable Bastion: Basic for Linux only, Standard when Windows is
+# enabled. Use an unused /26 or larger subnet inside your VNet.
+# bastion_subnet_prefix = "10.241.3.0/26"
+
+# Optional private Windows desktop. No Linux VM is required. Supply its
+# administrator password ephemerally using the PowerShell helper in README,
+# never in this file. The Entra principal must be a user object ID.
+# windows_desktop_enabled = true
+# windows_entra_login_principal_id = "00000000-0000-0000-0000-000000000000"
+
+tags = {
+  environment = "test"
+}

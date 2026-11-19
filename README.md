@@ -1,13 +1,23 @@
-# Foundry multi-project permissions validation
+# Foundry infrastructure validation
 
-This repository provides Bicep and validation evidence for hosting multiple Microsoft Foundry projects in one private, hardened Foundry account while isolating each team's Foundry User access to its own project. It also shows how to configure a hardened Foundry environment with private networking, disabled public access, disabled local/shared-key authentication, project-specific backing stores, explicit diagnostics, and controlled portal compatibility exceptions. The sample deployment uses two project children:
+This repository contains two independent infrastructure examples:
+
+| Objective | Infrastructure | Start here |
+|---|---|---|
+| Validate permissions across two projects in one Foundry account | Bicep and `azd` | [Bicep deployment instructions](#deployment-instructions) |
+| Deploy a private Foundry project with new or existing backing services | Terraform and AzAPI | [Terraform deployment guide](infra/terraform/README.md) |
+
+See the [infrastructure folder map](infra/README.md) for the purpose of each
+directory and the separate Terraform state roots.
+
+The Bicep example validates hosting multiple Microsoft Foundry projects in one private, hardened Foundry account while isolating each team's Foundry User access to its own project. It also shows how to configure a hardened Foundry environment with private networking, disabled public access, disabled local/shared-key authentication, project-specific backing stores, explicit diagnostics, and controlled portal compatibility exceptions. The sample deployment uses two project children:
 
 - `hoa-project`
 - `one-to-four-residential-contract-project`
 
 The environment is intentionally small and validation-focused. It proves which permissions are required for Foundry portal authoring, agent runtime, evaluations, Foundry IQ/Knowledge, and private network access while keeping each project's backing data estate separate.
 
-## Current status
+## Bicep validation status
 
 The validation environment is deployed in `rg-foundry-permissions-validation`. Agent creation, playground thread execution, evaluation creation/rubric generation, and Foundry IQ/Knowledge access have been tested through a private Windows validation VM reached through Azure Bastion.
 
@@ -142,6 +152,12 @@ Known limitation:
 | `docs/architecture/foundry-permissions.drawio` | diagrams.net source diagram for the deployed architecture and permissions. |
 
 ## Deployment instructions
+
+For a separate private, network-injected Terraform deployment using
+project capability hosts and non-preview ARM API versions, see
+[`infra/terraform/README.md`](infra/terraform/README.md). It creates a new
+Foundry account and can use new or existing data services without taking over
+this Bicep validation environment.
 
 This repository supports `azd up` through `azure.yaml` and the subscription-scope wrapper in `infra/azd/main.bicep`. The wrapper orchestrates resource-group bootstrap, private Foundry infrastructure, access role assignments, and the private validation VM.
 

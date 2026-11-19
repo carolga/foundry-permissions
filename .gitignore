@@ -17,3 +17,12 @@
 .validation-review-vm/
 infra/environments/validation.*.bicepparam
 !infra/environments/validation.bicepparam.example
+
+# Terraform provider cache, state, saved plans, and local deployment values
+**/.terraform/
+**/terraform.tfstate*
+**/*.tfplan
+**/*.tfvars
+**/*.tfvars.json
+**/crash.log
+infra/terraform/**/__pycache__/

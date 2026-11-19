@@ -1,0 +1,8 @@
+subscription_id     = "00000000-0000-0000-0000-000000000000"
+resource_group_name = "rg-foundry-backing-test"
+location            = "westus3"
+name_prefix         = "hoabyo"
+
+tags = {
+  environment = "test"
+}

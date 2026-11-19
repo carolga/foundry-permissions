@@ -1,0 +1,121 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="foundry-terraform" name="Private Foundry - Terraform">
+    <mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1540" pageHeight="1000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Private Microsoft Foundry | Terraform architecture" style="text;html=1;align=left;verticalAlign=middle;fontSize=30;fontStyle=1;fontColor=#172554;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="1460" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Standard Agent Setup with a dedicated virtual network and new or existing backing services | West US 3 example" style="text;html=1;align=left;verticalAlign=middle;fontSize=16;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="40" y="73" width="1460" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="platform" value="AZURE DEPLOYMENT  /  infra/terraform" style="rounded=1;arcSize=4;html=1;fillColor=#F8FAFC;strokeColor=#94A3B8;align=left;verticalAlign=top;spacingLeft=16;spacingTop=12;fontSize=15;fontStyle=1;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="230" y="130" width="1270" height="600" as="geometry"/>
+        </mxCell>
+        <mxCell id="vnet" value="Dedicated Azure virtual network (BYO VNet)" style="rounded=1;arcSize=5;html=1;fillColor=#EFF6FF;strokeColor=#60A5FA;align=left;verticalAlign=top;spacingLeft=14;spacingTop=10;fontSize=16;fontStyle=1;fontColor=#1E3A8A;" vertex="1" parent="1">
+          <mxGeometry x="250" y="181" width="656" height="458" as="geometry"/>
+        </mxCell>
+        <mxCell id="bastion-subnet" value="AzureBastionSubnet" style="rounded=1;html=1;align=left;verticalAlign=top;spacingTop=5;spacingLeft=8;fontSize=12;fontStyle=1;fillColor=#FFFFFF;strokeColor=#93C5FD;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="225" width="300" height="102" as="geometry"/>
+        </mxCell>
+        <mxCell id="validation-subnet" value="Validation subnet" style="rounded=1;html=1;align=left;verticalAlign=top;spacingTop=5;spacingLeft=8;fontSize=12;fontStyle=1;fillColor=#FFFFFF;strokeColor=#93C5FD;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="365" width="300" height="128" as="geometry"/>
+        </mxCell>
+        <mxCell id="pe-subnet" value="Private endpoint subnet" style="rounded=1;html=1;align=left;verticalAlign=top;spacingTop=5;spacingLeft=8;fontSize=13;fontStyle=1;fillColor=#DBEAFE;strokeColor=#60A5FA;" vertex="1" parent="1">
+          <mxGeometry x="706" y="225" width="180" height="394" as="geometry"/>
+        </mxCell>
+        <mxCell id="operator" value="&lt;b&gt;Operator&lt;/b&gt;&lt;br&gt;Azure portal / Bastion client" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#F1F5F9;strokeColor=#94A3B8;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="247" width="150" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="bastion" value="&lt;b&gt;Azure Bastion (optional)&lt;/b&gt;&lt;br&gt;Public IP for HTTPS; Standard with Windows&lt;br&gt;Basic for Linux-only setup" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#64748B;fontSize=13;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="285" y="251" width="270" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="vms" value="&lt;b&gt;Private validation VMs (optional)&lt;/b&gt;&lt;br&gt;Windows desktop: RDP, Entra login extension&lt;br&gt;Linux jumpbox: SSH / validation scripts&lt;br&gt;No public IPs; VM identities have project access" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#64748B;fontSize=13;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="285" y="395" width="270" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="injection" value="&lt;b&gt;Delegated agents subnet&lt;/b&gt;&lt;br&gt;Microsoft.App/environments&lt;br&gt;Foundry Agent Service network injection" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#DBEAFE;strokeColor=#60A5FA;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="270" y="525" width="300" height="94" as="geometry"/>
+        </mxCell>
+        <mxCell id="foundry-pe" value="Foundry PE&lt;br&gt;&lt;b&gt;account&lt;/b&gt;" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#60A5FA;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="726" y="253" width="140" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="blob-pe" value="Storage PE&lt;br&gt;&lt;b&gt;blob&lt;/b&gt;" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#60A5FA;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="726" y="411" width="140" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="cosmos-pe" value="Cosmos DB PE&lt;br&gt;&lt;b&gt;Sql&lt;/b&gt;" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#60A5FA;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="726" y="478" width="140" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="search-pe" value="AI Search PE&lt;br&gt;&lt;b&gt;searchService&lt;/b&gt;" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#60A5FA;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="726" y="545" width="140" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="dns" value="&lt;b&gt;Azure Private DNS&lt;/b&gt; | Six VNet-linked zones; records managed through private endpoint zone groups&lt;br&gt;cognitiveservices, openai, services.ai, blob, documents (Cosmos DB), and search" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#F0F9FF;strokeColor=#7DD3FC;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="250" y="655" width="656" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="account" value="Microsoft Foundry account  |  Public access disabled" style="rounded=1;arcSize=6;html=1;fillColor=#E0E7FF;strokeColor=#6366F1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fontSize=16;fontStyle=1;fontColor=#312E81;" vertex="1" parent="1">
+          <mxGeometry x="980" y="181" width="498" height="184" as="geometry"/>
+        </mxCell>
+        <mxCell id="account-host" value="&lt;b&gt;Account capability host&lt;/b&gt;&lt;br&gt;Auto-created by network injection" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#A5B4FC;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="999" y="224" width="209" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="model" value="&lt;b&gt;Model deployment (optional)&lt;/b&gt;&lt;br&gt;Example: hoa-chat / GPT-5.4 mini" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#64748B;dashed=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="999" y="290" width="209" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="project" value="&lt;b&gt;Foundry project (hoa-project)&lt;/b&gt;&lt;br&gt;System-assigned managed identity&lt;br&gt;Project capability host: agents&lt;br&gt;&lt;br&gt;Optional Terraform-managed synthetic&lt;br&gt;prompt agent (off by default)" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#818CF8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1227" y="224" width="232" height="122" as="geometry"/>
+        </mxCell>
+        <mxCell id="stores" value="BACKING SERVICES  /  Created together or supplied as existing resources" style="rounded=1;arcSize=6;html=1;fillColor=#ECFDF5;strokeColor=#34D399;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fontSize=13;fontStyle=1;fontColor=#065F46;" vertex="1" parent="1">
+          <mxGeometry x="980" y="376" width="498" height="334" as="geometry"/>
+        </mxCell>
+        <mxCell id="blob" value="&lt;b&gt;Azure Blob Storage&lt;/b&gt;  |  Agent files and artifacts" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="999" y="411" width="460" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="cosmos" value="&lt;b&gt;Azure Cosmos DB for NoSQL&lt;/b&gt;  |  Thread storage" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="999" y="478" width="460" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="search" value="&lt;b&gt;Azure AI Search&lt;/b&gt;  |  Vector store for file search" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#6EE7B7;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="999" y="545" width="460" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="stores-note" value="Public access disabled on all three stores.&lt;br&gt;Separate deployment option: infra/terraform/backing-stores&lt;br&gt;Existing stores may reside in another resource group." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=13;fontColor=#065F46;" vertex="1" parent="1">
+          <mxGeometry x="999" y="615" width="460" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="bindings" value="LOGICAL CONFIGURATION  |  Project capability host: agents" style="rounded=1;arcSize=7;html=1;fillColor=#F5F3FF;strokeColor=#A78BFA;align=left;verticalAlign=top;spacingLeft=14;spacingTop=10;fontSize=15;fontStyle=1;fontColor=#4C1D95;" vertex="1" parent="1">
+          <mxGeometry x="230" y="750" width="1270" height="162" as="geometry"/>
+        </mxCell>
+        <mxCell id="binding-note" value="The host references these project connection names, not resource IDs. Each connection points to its backing resource and uses Microsoft Entra ID; the project identity receives scoped RBAC." style="text;html=1;whiteSpace=wrap;align=left;fontSize=13;fontColor=#4C1D95;" vertex="1" parent="1">
+          <mxGeometry x="250" y="782" width="1210" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage-binding" value="storageConnections&lt;br&gt;&lt;b&gt;conn-hoa-storage&lt;/b&gt; → Blob Storage" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#C4B5FD;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="250" y="828" width="390" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cosmos-binding" value="threadStorageConnections&lt;br&gt;&lt;b&gt;conn-hoa-cosmos&lt;/b&gt; → Cosmos DB" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#C4B5FD;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="660" y="828" width="390" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="search-binding" value="vectorStoreConnections&lt;br&gt;&lt;b&gt;conn-hoa-search&lt;/b&gt; → Azure AI Search" style="rounded=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#C4B5FD;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="828" width="390" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Dashed boxes: optional components/subnets.  |  Blue arrows: private traffic / Private Link.  |  Capability-host path, not capabilitySettings. No DR." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="230" y="927" width="1270" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="https" value="HTTPS" style="endArrow=block;html=1;strokeColor=#64748B;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.47;labelBackgroundColor=#FFFFFF;" edge="1" source="operator" target="bastion" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="session" value="RDP / SSH (NSG-restricted)" style="endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#FFFFFF;" edge="1" source="bastion" target="vms" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="portal-path" value="Foundry HTTPS" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#FFFFFF;" edge="1" source="vms" target="foundry-pe" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="627" y="435"/><mxPoint x="627" y="280"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="agent-path" value="Private runtime&lt;br&gt;access to stores" style="endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.88;labelBackgroundColor=#FFFFFF;" edge="1" source="injection" target="pe-subnet" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="foundry-link" style="endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.54;" edge="1" source="foundry-pe" target="account" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="blob-link" style="endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="blob-pe" target="blob" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="cosmos-link" style="endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="cosmos-pe" target="cosmos" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="search-link" style="endArrow=block;html=1;strokeColor=#2563EB;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="search-pe" target="search" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
